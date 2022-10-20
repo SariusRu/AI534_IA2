@@ -3,8 +3,8 @@ import pandas as pd
 
 # constants
 train_data = "/home/sam/Documents/source/Python/AI534/IA2/IA2-train.csv"
-val = "IA1_dev.csv"
-THRESHOLD = 50
+val = "/home/sam/Documents/source/Python/AI534/IA2/IA2-dev.csv"
+THRESHOLD = 20
 LEARNING_RATE = 0.1
 LAMBDA_VALUE = 1
 
@@ -39,8 +39,7 @@ def regression(x, y):
     m = np.shape(x)[0]  # total number of samples
     n = np.shape(x)[1]  # total number of features
 
-    x = np.concatenate((np.ones((m, 1)), x), axis=1)
-    weights = np.random.randn(n + 1, )
+    weights = np.random.randn(n, )
 
     costs = []
 
@@ -51,19 +50,34 @@ def regression(x, y):
         cost = (0.5 * m) * np.sum(error ** 2) + ridge_reg_term
         gradient = (1 / m) * (x.T.dot(error) + (LAMBDA_VALUE * weights))
         weights = weights - LEARNING_RATE * gradient
-        print(f"cost:{cost}")
+        print(f"iter: {len(costs)}\tcost:{cost}")
         costs.append(cost)
         if len(costs) > 2 and (costs[len(costs)-2]-costs[len(costs)-1] < THRESHOLD):
             return weights, costs
 
 
+def check_accuracy(weights, data, classes):
+    pred = [0] * len(data)
+    dif = 0
+    for index, value in data.iterrows():
+        sum_val = 0
+        for weight_index, weight in enumerate(weights):
+            sum_val += value[weight_index] * weight
+        pred[index] = round(sum_val)
+    for index, value in enumerate(pred):
+        dif = dif + abs(classes[index] - value)
+    return dif
+
+
 def lr_l2_train(train_data, classes, val_data, val_classes):
     weights, cost_history = regression(train_data, classes.to_numpy())
     print(f"Calculation after {len(cost_history)} iterations completed")
-    print(weights)
 
-    train_acc = None
-    val_acc = None
+    train_acc = check_accuracy(weights, train_data, classes)
+    val_acc = check_accuracy(weights, val_data, val_classes)
+
+    print(train_acc)
+    print(val_acc)
 
     return weights, train_acc, val_acc
 
