@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # constants
 train_data = "/home/sam/Documents/source/Python/AI534/IA2/IA2-train.csv"
 val = "/home/sam/Documents/source/Python/AI534/IA2/IA2-dev.csv"
-THRESHOLD = 20
+THRESHOLD = 1000
 LEARNING_RATE = 0.1
 LAMBDA_VALUE = 1
 
@@ -52,7 +53,8 @@ def regression(x, y):
         weights = weights - LEARNING_RATE * gradient
         print(f"iter: {len(costs)}\tcost:{cost}")
         costs.append(cost)
-        if len(costs) > 2 and (costs[len(costs)-2]-costs[len(costs)-1] < THRESHOLD):
+        if len(costs) > 2 and (
+                (costs[len(costs)-2]-costs[len(costs)-1] < THRESHOLD) or costs[len(costs)-1] < 0):
             return weights, costs
 
 
@@ -93,22 +95,44 @@ def LR_L1_train(train_data, val_data, lambda_value):
 
 # Generates and saves plots of the accuracy curves. Note that you can interpret accs as a matrix
 # containing the accuracies of runs with different lambda values and then put multiple loss curves in a single plot.
-def plot_losses(accs):
-    # Your code here:
+def plot_accuracy(lambda_values, train, val):
+    # make
 
+    # plot
+    fig, ax = plt.subplots()
+
+    ax.plot(lambda_values, train, linewidth=2.0)
+    ax.plot(lambda_values, val, linewidth=2.0)
+
+    plt.xscale('log')
+
+    plt.show()
     return
 
 
-# Invoke the above functions to implement the required functionality for each part of the assignment.
-# Part 0  : Data preprocessing.
-# Your code here:
+def Task1a():
+    data = load_data(train_data)
+    data, classes = preprocess_data(data, True)
+    val_data = load_data(val)
+    val_data, val_classes = preprocess_data(val_data, True)
+    train_acc_collected = []
+    val_acc_collected = []
+    raw_lambda_values = range(-4, 3)
+    lambda_values = []
+    for value in raw_lambda_values:
+        lambda_values.append(10**value)
+
+    for value in lambda_values:
+        LAMBDA_VALUE = value
+        print(f'Training with {LAMBDA_VALUE} as Lambda')
+        weights, train_acc, val_acc = lr_l2_train(data, classes, val_data, val_classes)
+        train_acc_collected.append(train_acc)
+        val_acc_collected.append(val_acc)
+
+    plot_accuracy(lambda_values, train_acc_collected, val_acc_collected)
 
 
-data = load_data(train_data)
-data, classes = preprocess_data(data, True)
-val_data = load_data(val)
-val_data, val_classes = preprocess_data(val_data, True)
-lr_l2_train(data, classes, val_data, val_classes)
+Task1a()
 
 # Part 1 . Implement logistic regression with L2 regularization and experiment with different lambdas
 # Your code here:
