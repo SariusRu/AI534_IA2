@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # constants
 train_data = "/home/sam/Documents/source/Python/AI534/IA2/IA2-train.csv"
 val = "/home/sam/Documents/source/Python/AI534/IA2/IA2-dev.csv"
-THRESHOLD = 1000
+THRESHOLD = 100
 LEARNING_RATE = 0.1
 LAMBDA_VALUE = 1
 
@@ -36,7 +36,7 @@ def preprocess_data(loaded_data, normalize):
     return loaded_data, target_classes
 
 
-def regression(x, y):
+def regression(x, y, lambda_value):
     m = np.shape(x)[0]  # total number of samples
     n = np.shape(x)[1]  # total number of features
 
@@ -47,9 +47,9 @@ def regression(x, y):
     while True:
         y_estimated = x.dot(weights)
         error = y_estimated - y
-        ridge_reg_term = (LAMBDA_VALUE / 2 * m) * np.sum(np.square(weights))
+        ridge_reg_term = (lambda_value / 2 * m) * np.sum(np.square(weights))
         cost = (0.5 * m) * np.sum(error ** 2) + ridge_reg_term
-        gradient = (1 / m) * (x.T.dot(error) + (LAMBDA_VALUE * weights))
+        gradient = (1 / m) * (x.T.dot(error) + (lambda_value * weights))
         weights = weights - LEARNING_RATE * gradient
         print(f"iter: {len(costs)}\tcost:{cost}")
         costs.append(cost)
@@ -71,8 +71,8 @@ def check_accuracy(weights, data, classes):
     return dif
 
 
-def lr_l2_train(train_data, classes, val_data, val_classes):
-    weights, cost_history = regression(train_data, classes.to_numpy())
+def lr_l2_train(train_data, classes, val_data, val_classes, lambda_value = LAMBDA_VALUE):
+    weights, cost_history = regression(train_data, classes.to_numpy(), lambda_value)
     print(f"Calculation after {len(cost_history)} iterations completed")
 
     train_acc = check_accuracy(weights, train_data, classes)
@@ -123,6 +123,7 @@ def calculate(values, powered=False):
 
     train_acc_collected = []
     val_acc_collected = []
+    weights_collected = []
     raw_lambda_values = values
     lambda_values = []
     for value in raw_lambda_values:
@@ -134,13 +135,16 @@ def calculate(values, powered=False):
     for value in lambda_values:
         LAMBDA_VALUE = value
         print(f'Training with {LAMBDA_VALUE} as Lambda')
-        weights, train_acc, val_acc = lr_l2_train(data, classes, val_data, val_classes)
+        weights, train_acc, val_acc = lr_l2_train(data, classes, val_data, val_classes, value)
+        weights_collected.append(weights)
         train_acc_collected.append(train_acc)
         val_acc_collected.append(val_acc)
 
         print_weights(weights)
 
     plot_accuracy(lambda_values, train_acc_collected, val_acc_collected)
+    return weights_collected
+
 
 
 def Task1a():
@@ -149,10 +153,21 @@ def Task1a():
 def Task1b():
     calculate([90, 100, 110], True)
 
+def Task1c():
+    weights = calculate(range(-10, 10), False)
+    for index_outer, value in enumerate(weights):
+        counter = 0
+        for index_inner, weight_value in enumerate(value):
+            if(abs(weight_value)<(10**-6)):
+                counter = counter + 1
+        print(counter)
+
+
 
 
 #Task1a()
-Task1b()
+#Task1b()
+Task1c()
 
 
 # Part 2  Training and experimenting with IA2-train-noisy data.
