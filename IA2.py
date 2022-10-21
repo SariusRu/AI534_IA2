@@ -110,17 +110,26 @@ def plot_accuracy(lambda_values, train, val):
     return
 
 
-def Task1a():
+def print_weights(weights):
+    weights = weights.sort_values(ascending=False)
+    print(weights.head(n=5))
+
+
+def calculate(values, powered=False):
     data = load_data(train_data)
     data, classes = preprocess_data(data, True)
     val_data = load_data(val)
     val_data, val_classes = preprocess_data(val_data, True)
+
     train_acc_collected = []
     val_acc_collected = []
-    raw_lambda_values = range(-4, 3)
+    raw_lambda_values = values
     lambda_values = []
     for value in raw_lambda_values:
-        lambda_values.append(10**value)
+        if not powered:
+            lambda_values.append(10 ** value)
+        else:
+            lambda_values.append(value)
 
     for value in lambda_values:
         LAMBDA_VALUE = value
@@ -129,13 +138,21 @@ def Task1a():
         train_acc_collected.append(train_acc)
         val_acc_collected.append(val_acc)
 
+        print_weights(weights)
+
     plot_accuracy(lambda_values, train_acc_collected, val_acc_collected)
 
 
-Task1a()
+def Task1a():
+    calculate(range(-4, 3), False)
 
-# Part 1 . Implement logistic regression with L2 regularization and experiment with different lambdas
-# Your code here:
+def Task1b():
+    calculate([90, 100, 110], True)
+
+
+
+#Task1a()
+Task1b()
 
 
 # Part 2  Training and experimenting with IA2-train-noisy data.
