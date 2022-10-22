@@ -1,10 +1,13 @@
 import numpy as np
 import pandas as pd
+import matplotlib
+
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 # constants
-train_data = "/home/sam/Documents/source/Python/AI534/IA2/IA2-train.csv"
-val = "/home/sam/Documents/source/Python/AI534/IA2/IA2-dev.csv"
+train_data = "/Users/devashreebhavsar/Documents/DevashreeBhavsar/AI534_IA2/IA2-train-1.csv"
+val = "/Users/devashreebhavsar/Documents/DevashreeBhavsar/AI534_IA2/IA2-dev-1.csv"
 THRESHOLD = 100
 LEARNING_RATE = 0.1
 LAMBDA_VALUE = 1
@@ -20,7 +23,6 @@ def load_data(path):
 # of the three numerical features.
 
 def preprocess_data(loaded_data, normalize):
-
     normalize_data = loaded_data[['Age', 'Vintage', 'Annual_Premium']]
     loaded_data = loaded_data.drop(['Age', 'Vintage', 'Annual_Premium'], axis=1)
 
@@ -54,7 +56,7 @@ def regression(x, y, lambda_value):
         print(f"iter: {len(costs)}\tcost:{cost}")
         costs.append(cost)
         if len(costs) > 2 and (
-                (costs[len(costs)-2]-costs[len(costs)-1] < THRESHOLD) or costs[len(costs)-1] < 0):
+                (costs[len(costs) - 2] - costs[len(costs) - 1] < THRESHOLD) or costs[len(costs) - 1] < 0):
             return weights, costs
 
 
@@ -71,7 +73,7 @@ def check_accuracy(weights, data, classes):
     return dif
 
 
-def lr_l2_train(train_data, classes, val_data, val_classes, lambda_value = LAMBDA_VALUE):
+def lr_l2_train(train_data, classes, val_data, val_classes, lambda_value=LAMBDA_VALUE):
     weights, cost_history = regression(train_data, classes.to_numpy(), lambda_value)
     print(f"Calculation after {len(cost_history)} iterations completed")
 
@@ -87,10 +89,6 @@ def lr_l2_train(train_data, classes, val_data, val_classes, lambda_value = LAMBD
 # Trains a logistic regression model with L1 regularization on the provided train_data, using the supplied lambda
 # weights should store the per-feature weights of the learned logisitic regression model. train_acc and val_acc 
 # should store the training and validation accuracy respectively. 
-def LR_L1_train(train_data, val_data, lambda_value):
-    # Your code here:
-
-    return weights, train_acc, val_acc
 
 
 # Generates and saves plots of the accuracy curves. Note that you can interpret accs as a matrix
@@ -143,30 +141,30 @@ def calculate(values, powered=False):
         print_weights(weights)
 
     plot_accuracy(lambda_values, train_acc_collected, val_acc_collected)
-    return weights_collected
 
+    return weights_collected
 
 
 def Task1a():
     calculate(range(-4, 3), False)
 
+
 def Task1b():
     calculate([90, 100, 110], True)
+
 
 def Task1c():
     weights = calculate(range(-10, 10), False)
     for index_outer, value in enumerate(weights):
         counter = 0
         for index_inner, weight_value in enumerate(value):
-            if(abs(weight_value)<(10**-6)):
+            if (abs(weight_value) < (10 ** -6)):
                 counter = counter + 1
         print(counter)
 
 
-
-
-#Task1a()
-#Task1b()
+# Task1a()
+# Task1b()
 Task1c()
 
 
@@ -176,3 +174,119 @@ Task1c()
 
 # Part 3  Implement logistic regression with L1 regularization and experiment with different lambdas
 # Your code here:
+def sig(x):
+    return 1/(1 + np.exp(-x))
+
+def regression_lasso(x, y, lambda_value):
+    m = np.shape(x)[0]  # total number of samples
+    n = np.shape(x)[1]  # total number of features
+
+    weights_lasso = np.random.randn(n, )
+
+    costs = []
+
+    while True:
+        y_estimated = x.dot(weights_lasso)
+        error = y_estimated - y
+        gradient = (1 / m) * (x.T.dot(error) + (lambda_value * weights_lasso))
+        lasso_reg_term = np.multiply(np.sign(weights_lasso), np.maximum((np.absolute(weights_lasso) - LEARNING_RATE * lambda_value), 0))
+        cost = (0.5 * m) * np.sum(error ** 2) + lasso_reg_term
+        weights_lasso = weights_lasso - LEARNING_RATE * gradient
+
+        print(f"iter: {len(costs)}\tcost:{cost}")
+
+        costs.append(cost)
+
+        if len(costs) > 2 and ((costs[len(costs) - 2] - costs[len(costs) - 1] < THRESHOLD) or costs[len(costs) - 1] < 0):
+            return weights_lasso, costs
+
+
+def check_accuracy_lasso(weights_lasso, data, classes):
+    pred = [0] * len(data)
+    dif = 0
+    for index, value in data.iterrows():
+        sum_val = 0
+        for weight_index, weights_lasso in enumerate(weights_lasso):
+            sum_val += value[weight_index] * weights_lasso
+        pred[index] = round(sum_val)
+    for index, value in enumerate(pred):
+        dif = dif + abs(classes[index] - value)
+    return dif
+
+
+def lr_l1_train(train_data, classes, val_data, val_classes, lambda_value=LAMBDA_VALUE):
+    weights_lasso, cost_history = regression_lasso(train_data, classes.to_numpy(), lambda_value)
+    print(f"Calculation after {len(cost_history)} iterations completed")
+
+    train_acc = check_accuracy_lasso(weights_lasso, train_data, classes)
+    val_acc = check_accuracy_lasso(weights_lasso, val_data, val_classes)
+
+    print('Training accuracy:', train_acc)
+    print('Validation accuracy:', val_acc)
+
+    return weights_lasso, train_acc, val_acc
+
+
+# Generates and saves plots of the accuracy curves. Note that you can interpret accs as a matrix
+# containing the accuracies of runs with different lambda values and then put multiple loss curves in a single plot.
+
+
+def print_weights_lasso(weights_lasso):
+    weights_lasso = weights_lasso.sort_values(ascending=False)
+    print(weights_lasso.head(n=5))
+
+
+def calculate_lasso(values, powered=False):
+    data = load_data(train_data)
+    data, classes = preprocess_data(data, True)
+    val_data = load_data(val)
+    val_data, val_classes = preprocess_data(val_data, True)
+
+    train_acc_collected = []
+    val_acc_collected = []
+    weights_collected = []
+    raw_lambda_values = values
+    lambda_values = []
+    for value in raw_lambda_values:
+        if not powered:
+            lambda_values.append(10 ** value)
+        else:
+            lambda_values.append(value)
+
+    for value in lambda_values:
+        LAMBDA_VALUE = value
+        print(f'Training with {LAMBDA_VALUE} as Lambda')
+        weights_lasso, train_acc, val_acc = lr_l1_train(data, classes, val_data, val_classes, value)
+        weights_collected.append(weights_lasso)
+        train_acc_collected.append(train_acc)
+        val_acc_collected.append(val_acc)
+
+        print_weights_lasso(weights_lasso)
+
+    plot_accuracy(lambda_values, train_acc_collected, val_acc_collected)
+
+    return weights_collected
+
+
+def Task3a_lasso():
+    calculate_lasso(range(-4, 3), False)
+
+
+def Task3b_lasso():
+    calculate_lasso([90, 100, 110], True)
+
+
+def Task3c_lasso():
+    weights_lasso = calculate_lasso(range(-10, 10), False)
+    for index_outer, value in enumerate(weights_lasso):
+        counter = 0
+        for index_inner, weight_value in enumerate(value):
+            if abs(weight_value) == 0:
+                counter = counter + 1
+        print(counter)
+
+
+#Task3a_lasso()
+#Task3b_lasso()
+Task3b_lasso()
+
