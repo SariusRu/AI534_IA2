@@ -64,7 +64,7 @@ def regression2(x, y, lambda_value):
     m = np.shape(x)[0]  # total number of samples
     n = np.shape(x)[1]  # total number of features
 
-    weights = np.zeros(n, )
+    weights = np.random.rand(n, )
 
     costs = []
 
@@ -74,14 +74,8 @@ def regression2(x, y, lambda_value):
         ridge_reg_term = (lambda_value / m) * np.sum(np.square(weights))
         cost = (0.5 * m) * np.sum(error ** 2) + ridge_reg_term
         gradient = (1 / m) * (x.T.dot(error) + (lambda_value * weights))
-        for index, weight_value in enumerate(weights):
-            weight_tmp = 0
-            if (abs(weight_value) - (lambda_value *LEARNING_RATE)) < 0:
-                weight_tmp = 0
-            else:
-                weight_tmp = abs(weight_value)-(lambda_value*LEARNING_RATE)
-            weight_tmp*sig(weight_value)
-            weights[index] = weight_tmp
+        sig_value = sig(weights)
+        weights = sig_value - LEARNING_RATE * gradient
         # print(f"iter: {len(costs)}\tcost:{cost}")
         costs.append(cost)
         if len(costs) > 2 and (
@@ -93,6 +87,7 @@ def check_accuracy(weights, data, classes):
     pred = [0] * len(data)
     dif = 0
     estimated = data.dot(weights)
+    estimated = estimated - 3
     for estimated_index, est_value in enumerate(estimated):
         pred[estimated_index] = round(est_value)
     for index, value in enumerate(pred):
@@ -181,7 +176,7 @@ def calculate2(values, powered=False):
         train_acc_collected.append(train_acc)
         val_acc_collected.append(val_acc)
 
-        print_weights(weights)
+        #print_weights(weights)
 
     plot_accuracy(lambda_values, train_acc_collected, val_acc_collected)
     return weights_collected
@@ -236,13 +231,14 @@ def Task1c():
         # print(value)
 
 def Task3():
-
+    calculate2([-4, -3, -2, -1, 0, 0.5, 1, 1.5, 2, 3], False)
 
 
 
 # Task1a()
 #Task1b()
-Task1c()
+#Task1c()
+Task3()
 
 
 # Part 2  Training and experimenting with IA2-train-noisy data.
